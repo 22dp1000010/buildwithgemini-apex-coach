@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apex Coach - Personalized Training & Fitness Concierge</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #ff4500;            /* Athletic Energy Orange */
+    --accent-hover: #e03d00;
+    --accent-glow: rgba(255, 69, 0, 0.18);
+    --bg: #0f172a;                /* Deep Slate / Midnight Gym Theme */
+    --surface: #1e293b;           /* Card / Container Slate */
+    --surface-light: #334155;     /* Border / Subtle hover */
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --user-msg: #ff4500;
+    --agent-msg: #1e293b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .brand-icon {
+    background: linear-gradient(135deg, #ff4500, #ff8c00);
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px var(--accent-glow);
+  }
+  .brand-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+  .brand-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 6px #4ade80;
+  }
+
+  /* Chat Log / Dialogue Layout */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1rem;
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    scroll-behavior: smooth;
+  }
+
+  .dialogue-turn {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 88%;
+  }
+  .dialogue-turn.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+  .dialogue-turn.agent {
+    align-self: flex-start;
+  }
+
+  .turn-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .dialogue-turn.user .turn-avatar {
+    background: var(--surface-light);
+    color: #cbd5e1;
+  }
+  .dialogue-turn.agent .turn-avatar {
+    background: linear-gradient(135deg, #ff4500, #ea580c);
+    color: #fff;
+  }
+
+  .bubble-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .turn-author {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 0 0.35rem;
+  }
+  .dialogue-turn.user .turn-author {
+    text-align: right;
+  }
+
+  .bubble {
+    padding: 0.85rem 1.1rem;
+    border-radius: 14px;
+    background: var(--agent-msg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-align: left;
+    white-space: pre-wrap;
+    line-height: 1.55;
+    font-size: 0.95rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  }
+  .dialogue-turn.user .bubble {
+    background: var(--user-msg);
+    color: #fff;
+    border: none;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 14px var(--accent-glow);
+  }
+  .dialogue-turn.agent .bubble {
+    border-bottom-left-radius: 4px;
+  }
+
+  /* When the reply is an A2UI card, drop the bubble wrapper */
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    white-space: normal;
+    box-shadow: none;
+  }
+
+  /* Prompt Suggestions Panel */
+  .prompts-container {
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.4rem 1rem 0.65rem;
+    display: flex;
+    gap: 0.6rem;
+    overflow-x: auto;
+  }
+  .prompt-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease-in-out;
+  }
+  .prompt-pill:hover {
+    background: var(--surface-light);
+    border-color: var(--accent);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .prompt-pill .material-symbols-outlined {
+    font-size: 1rem;
+    color: var(--accent);
+  }
+
+  /* Chat Input Form */
+  .input-panel {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.85rem 1.25rem 1.1rem;
+  }
+  form {
+    display: flex;
+    gap: 0.65rem;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: #0b1120;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+  input::placeholder {
+    color: #64748b;
+  }
+  button {
+    padding: 0.8rem 1.35rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 2px 8px var(--accent-glow);
+  }
+  button:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+
+  /* --- A2UI component styles (Card, Column, Row, Text, Divider, List, Image, Icon) --- */
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    background: var(--surface);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    max-width: 100%;
+    color: var(--text);
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.75rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.65rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.45; }
+  .a2text.a2-h1 { font-size: 1.45rem; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
+  .a2text.a2-h2 { font-size: 1.2rem; font-weight: 700; color: #fff; }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; color: #f1f5f9; }
+  .a2text.a2-h4 { font-size: 0.95rem; font-weight: 600; color: #e2e8f0; }
+  .a2text.a2-caption { font-size: 0.82rem; color: var(--text-muted); }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.6rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 10px; display: block; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.25rem; line-height: 1; vertical-align: middle; color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-icon">
+      <span class="material-symbols-outlined" style="color:#fff;font-size:1.3rem;">fitness_center</span>
+    </div>
+    <div>
+      <div class="brand-title">Apex Coach</div>
+      <div class="brand-subtitle">Personalized Training & Fitness Concierge</div>
+    </div>
+  </div>
+  <div class="header-badge">
+    <div class="pulse-dot"></div>
+    <span>Agent Active</span>
+  </div>
+</header>
+
+<div id="log">
+  <div class="dialogue-turn agent">
+    <div class="turn-avatar"><span class="material-symbols-outlined" style="color:#fff;font-size:1.1rem;">sports_gymnastics</span></div>
+    <div class="bubble-content">
+      <div class="turn-author">Apex Coach</div>
+      <div class="bubble">Welcome to Apex Coach! 💪 I can help plan workout routines, log your sets and reps, calculate your 1RM and heart rate zones, find nearby gyms, or award celebratory milestone badges. How can I help your training today?</div>
+    </div>
+  </div>
+</div>
+
+<div class="input-panel">
+  <div class="prompts-container">
+    <div class="prompt-pill" data-prompt="Find 3 chest and tricep exercises for strength hypertrophy">
+      <span class="material-symbols-outlined">menu_book</span>
+      <span>Find chest & tricep exercises</span>
+    </div>
+    <div class="prompt-pill" data-prompt="Calculate my 1RM and training zones if I bench pressed 225 lbs for 5 reps">
+      <span class="material-symbols-outlined">calculate</span>
+      <span>Calculate 1RM & zones (225x5)</span>
+    </div>
+    <div class="prompt-pill" data-prompt="Generate a celebratory achievement badge for hitting a 315 lb back squat PR">
+      <span class="material-symbols-outlined">military_tech</span>
+      <span>Generate 315 lb Squat PR badge</span>
+    </div>
+  </div>
+
+  <form id="form">
+    <input id="input" placeholder="Ask Apex Coach about exercises, log a workout, calculate zones…" autocomplete="off" autofocus>
+    <button>
+      <span>Send</span>
+      <span class="material-symbols-outlined" style="color:#fff;font-size:1.05rem;">send</span>
+    </button>
+  </form>
+</div>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const promptPills = document.querySelectorAll(".prompt-pill");
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+let msgIndex = 0;
+function bubble(who) {
+  msgIndex++;
+  const turn = el("div", "dialogue-turn " + who);
+  turn.setAttribute("data-msg-id", String(msgIndex));
+  const avatar = el("div", "turn-avatar");
+  const icon = el("span", "material-symbols-outlined");
+  
+  if (who === "user") {
+    icon.textContent = "person";
+    icon.style.color = "#cbd5e1";
+    icon.style.fontSize = "1.1rem";
+  } else {
+    icon.textContent = "sports_gymnastics";
+    icon.style.color = "#fff";
+    icon.style.fontSize = "1.1rem";
+  }
+  avatar.appendChild(icon);
+  turn.appendChild(avatar);
+
+  const content = el("div", "bubble-content");
+  const author = el("div", "turn-author", who === "user" ? "You" : "Apex Coach");
+  const b = el("div", "bubble");
+
+  content.appendChild(author);
+  content.appendChild(b);
+  turn.appendChild(content);
+
+  log.appendChild(turn);
+  log.scrollTop = log.scrollHeight;
+  return b;
+}
+
+/* ----------------------------------------------------------------------------
+ * A2UI mini-renderer (v0.8 Basic Catalog subset).
+ * Renders Card / Column / Row / Text / Divider / List / Image / Icon.
+ * -------------------------------------------------------------------------- */
+
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) return null;
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
+    }
+    default:
+      return null;
+  }
+}
+
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {
+    const referenced = new Set();
+    for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) { const node = buildNode(rid, comps, new Set()); if (node) { container.appendChild(node); drew = true; } }
+  return drew;
+}
+
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function renderReply(b, parts) {
+  b.textContent = "";
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) b.appendChild(el("div", null, textStr));
+
+  if (a2ui.length) {
+    b.classList.add("rich");
+    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+  }
+  if (!b.childNodes.length) b.textContent = "(no response)";
+  log.scrollTop = log.scrollHeight;
+}
+
+async function sendMessage(text) {
+  if (!text) return;
+  bubble("user").textContent = text;
+  input.value = "";
+  const b = bubble("agent"); b.textContent = "…";
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
+    renderReply(b, data.parts || []);
+  } catch (e) {
+    b.textContent = "Error: " + e.message;
+  }
+}
+
+form.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  sendMessage(input.value.trim());
+});
+
+promptPills.forEach(pill => {
+  pill.addEventListener("click", () => {
+    const promptText = pill.getAttribute("data-prompt");
+    if (promptText) {
+      input.value = promptText;
+      sendMessage(promptText);
+    }
+  });
+});
+</script>
+</body>
+</html>
